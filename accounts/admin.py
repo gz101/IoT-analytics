@@ -5,6 +5,6 @@ from .models import DashboardUser
 
 
 @admin.register(DashboardUser)
-class CustomUserAdmin(UserAdmin):
+class DashboardUserAdmin(UserAdmin):
     fieldsets = UserAdmin.fieldsets
     add_fieldsets = UserAdmin.add_fieldsets

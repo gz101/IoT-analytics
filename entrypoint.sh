@@ -11,4 +11,7 @@ echo "Running migrate..."
 poetry run python manage.py migrate --noinput
 
 # Start the Gunicorn server
-poetry run gunicorn config.wsgi:application --bind 0.0.0.0:8000
+echo "Starting Gunicorn (ASGI) server..."
+poetry run gunicorn config.asgi:application \
+    -k uvicorn.workers.UvicornWorker \
+    --bind 0.0.0.0:8000

@@ -28,6 +28,7 @@ services:
     depends_on:
       - db
       - redis
+      - mosquitto
 
   nginx:
     image: nginx:stable-alpine
@@ -40,6 +41,35 @@ services:
     depends_on:
       - web
 
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: iot_analytics-mosquitto
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - mosquitto_data:/mosquitto/config
+    env_file:
+      - .env
+    entrypoint: >
+      sh -c "
+      echo '${MQTT_USERNAME}:${MQTT_PASSWORD}' > /mosquitto/config/credentials && 
+      mosquitto_passwd -U /mosquitto/config/credentials && 
+      mv /mosquitto/config/credentials /mosquitto/config/passwordfile &&
+      exec mosquitto -c /mosquitto/config/mosquitto.conf"
+
+  mqtt-subscriber:
+    build: .
+    container_name: iot_analytics-subscriber
+    env_file:
+      - .env
+    command: poetry run python iot/mqtt_client.py
+    depends_on:
+      - db
+      - redis
+      - mosquitto
+
 volumes:
   postgres_data:
   static_data:
+  mosquitto_data:
