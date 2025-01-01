@@ -2,7 +2,11 @@
 FROM python:3.11-slim
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y curl build-essential && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y \
+    curl \
+    build-essential \
+    netcat-openbsd \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Poetry
 ENV POETRY_VERSION=1.5.1
@@ -29,8 +33,12 @@ RUN poetry install --no-dev
 # Collect static files during image build
 RUN poetry run python manage.py collectstatic --noinput
 
+# Copy the startup script into the container
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
 # Expose port 8000 for Gunicorn
 EXPOSE 8000
 
-# Run Gunicorn when the container starts
-CMD ["poetry", "run", "gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000"]
+# Use the startup script as the container's entry point
+CMD ["./entrypoint.sh"]
